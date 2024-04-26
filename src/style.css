@@ -136,3 +136,17 @@ button:hover, .customRadio:hover {
     font-weight: 800;
     text-transform: uppercase;
 }
+
+/* new stuff for A3! */
+
+.deleteButton {
+    min-width: 1rem;
+}
+.arrowButton {
+    margin-left: 1rem;
+    min-width: 1rem;
+}
+.clearButton {
+    display: flex;
+    justify-content: center;
+}

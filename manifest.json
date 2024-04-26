@@ -1,0 +1,13 @@
+{
+    "name": "Your App Name",
+    "start_url": "/",
+    "display": "fullscreen",
+    "icons": [
+      {
+        "src": "icon.png",
+        "type": "image/png",
+        "sizes": "512x512"
+      }
+    ]
+  }
+  

@@ -1,7 +1,9 @@
 <script>
     import '../style.css';
+    import {writable} from 'svelte/store';
     let taskItem = '';
-    let taskList = [
+    let storedTaskList;
+    let taskList = writable([
         {
             text: "clean the latrines.",
             priority: 2
@@ -14,14 +16,32 @@
             text: "take a bath.",
             priority: 1
         }
-    ];
-    let completedList = [
+    ]);
+    let storedCompletedList;
+    let completedList = writable([
         {
             text: "bow down in worship.",
             priority: 4
         }
-    ];
+    ]);
     let priorityLevel = 1;
+    let tempItem;
+
+    if (typeof window !== 'undefined' && typeof localStorage !== 'undefined') {
+        storedTaskList = localStorage.getItem('storedTaskList');
+        if(storedTaskList) {
+            $taskList = (JSON.parse(storedTaskList));
+        }
+        storedCompletedList = localStorage.getItem('storedCompletedList');
+        if(storedCompletedList) {
+            $completedList = (JSON.parse(storedCompletedList));
+        }
+    }
+
+    function updateLists() {
+        storedCompletedList = localStorage.setItem('storedCompletedList', JSON.stringify($completedList));
+        storedTaskList = localStorage.setItem('storedTaskList', JSON.stringify($taskList));
+    }
 
     function priorityStyle() {
         switch(priorityLevel) {
@@ -42,23 +62,51 @@
         if (taskItem == '') {
             return;
         }
-        taskList = [...taskList, {
+        $taskList = [...$taskList, {
             text: taskItem,
             priority: priorityStyle()
         }];
         taskItem = '';
-        console.log("plevel: " + priorityLevel)
+        updateLists();
     }
 
     function taskCompleted(index) {
-        completedList = [taskList[index], ...completedList];
-        completedList = completedList;
-        taskList.splice(index, 1)
-        taskList = taskList;
+        $completedList = [$taskList[index], ...$completedList];
+        $completedList = $completedList;
+        $taskList.splice(index, 1);
+        $taskList = $taskList;
+        updateLists();
     }
 
     function priorityEdit(index) {
-        taskList[index].priority = priorityStyle();
+        $taskList[index].priority = priorityStyle();
+        updateLists();
+    }
+
+    function deleteTask(index) {
+        $completedList.splice(index, 1);
+        $completedList = $completedList;
+        updateLists();
+    }
+
+    function moveTask(direction, index) {
+        if (direction == "up" && index !== 0) {
+            tempItem = $taskList[index-1];
+            $taskList[index-1] = $taskList[index];
+            $taskList[index] = tempItem;
+            updateLists();
+        }
+        else if (direction == "down" && index !== $taskList.length) {
+            tempItem = $taskList[index+1];
+            $taskList[index+1] = $taskList[index];
+            $taskList[index] = tempItem;
+            updateLists();
+        }
+    }
+
+    function clearCompleted() {
+        $completedList = [];
+        updateLists();
     }
 </script>
 
@@ -99,20 +147,26 @@
     <hr>
 
     <ul class="ordersWaiting">
-        {#each taskList as item, index}
+        {#each $taskList as item, index}
             <li>
                 <button on:click={() => priorityEdit(index)}>Change Priority</button>
                 <span class="taskText {item.priority}">{item.text}</span>
                 <button class="rightButton" on:click={() => taskCompleted(index)}>Task Complete</button>
+                <button class="rightButton arrowButton" on:click={() => moveTask("up", index)}>↑</button>
+                <button class="rightButton arrowButton" on:click={() => moveTask("down", index)}>↓</button>
             </li>
         {/each}
     </ul>
 
     <ul class="ordersComplete">
-        {#each completedList as item}
+        {#each $completedList as item, index}
             <li>
+                <button class="deleteButton" on:click={() => deleteTask(index)}>X</button>
                 <span class="done taskText">{item.text}</span>
             </li>
         {/each}
+        <li class="clearButton">
+            <button on:click={() => clearCompleted()}>Clear All Completed Tasks</button>
+        </li>
     </ul>
 </div>
